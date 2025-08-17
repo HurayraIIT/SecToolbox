@@ -17,7 +17,6 @@
  * Network: false
  */
 
-// Prevent direct access
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -79,7 +78,14 @@ final class SecToolbox_Loader
      */
     private function init_hooks(): void
     {
-        add_action('plugins_loaded', [$this, 'init']);
+        // Run init late so we don’t step on plugins
+        add_action('plugins_loaded', [$this, 'init'], 9999);
+
+        // Run after ALL plugin rest_api_init callbacks
+        add_action('rest_api_init', function () {
+            do_action('sectoolbox_rest_ready');
+        }, 9999);
+
         register_activation_hook(__FILE__, [$this, 'activate']);
         register_deactivation_hook(__FILE__, [$this, 'deactivate']);
     }
@@ -103,7 +109,6 @@ final class SecToolbox_Loader
      */
     private function check_requirements(): bool
     {
-        // Check PHP version
         if (version_compare(PHP_VERSION, '8.0', '<')) {
             add_action('admin_notices', function () {
                 echo '<div class="notice notice-error"><p>';
@@ -130,14 +135,13 @@ final class SecToolbox_Loader
     }
 
     /**
-     * Plugin activation
+     * On plugin activation
      */
     public function activate(): void
     {
-        // Set default options
         add_option('sectoolbox_version', SECTOOLBOX_VERSION);
 
-        // Create capabilities if needed
+        // Add custom capability
         $role = get_role('administrator');
         if ($role) {
             $role->add_cap('manage_sectoolbox');
@@ -145,24 +149,16 @@ final class SecToolbox_Loader
     }
 
     /**
-     * Plugin deactivation
+     * On plugin deactivation
      */
     public function deactivate(): void
     {
-        // Clean up scheduled events if any
         wp_clear_scheduled_hook('sectoolbox_cleanup');
     }
 
-    /**
-     * Prevent cloning
-     */
     private function __clone() {}
-
-    /**
-     * Prevent unserializing
-     */
     public function __wakeup() {}
 }
 
-// Initialize plugin
+// Initialize plugin loader
 SecToolbox_Loader::instance();

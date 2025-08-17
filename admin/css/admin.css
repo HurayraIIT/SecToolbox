@@ -357,3 +357,9 @@
 .sectoolbox-admin .high-contrast {
     filter: contrast(2);
 }
+
+.handle {
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+}

@@ -45,17 +45,37 @@ class SecToolbox_Route_Analyzer
         'promote_users'
     ];
 
-    /**
-     * Constructor
-     */
+    private bool $ready = false;
+
     public function __construct()
     {
-        /**
-         * Filter admin capabilities
-         *
-         * @param array $capabilities Admin capabilities
-         */
-        $this->admin_capabilities = apply_filters('sectoolbox_admin_capabilities', $this->admin_capabilities);
+        $this->admin_capabilities = apply_filters(
+            'sectoolbox_admin_capabilities',
+            $this->admin_capabilities
+        );
+
+        // Only mark ready AFTER all rest routes initialized
+        add_action('sectoolbox_rest_ready', function () {
+            $this->ready = true;
+        });
+    }
+
+    /**
+     * Ensure REST API routes are fully initialized
+     */
+    private function ensure_rest_routes_initialized(): void
+    {
+        global $wp_rest_server;
+
+        if (empty($wp_rest_server)) {
+            $wp_rest_server = rest_get_server();
+        }
+
+        // If routes not yet ready, force flush by firing rest_api_init manually
+        if (!$this->ready && !did_action('rest_api_init')) {
+            do_action('rest_api_init', $wp_rest_server);
+            $this->ready = true;
+        }
     }
 
     /**
@@ -67,81 +87,57 @@ class SecToolbox_Route_Analyzer
     {
         global $wp_rest_server;
 
-        if (empty($wp_rest_server)) {
-            $wp_rest_server = rest_get_server();
-        }
+        $this->ensure_rest_routes_initialized();
 
         $routes = $wp_rest_server->get_routes();
         $plugin_namespaces = [];
 
         foreach ($routes as $route => $handlers) {
-            // Skip core WordPress routes
-            if (preg_match('#^/(wp/v2|oembed|wp-site-health/v1|wp-block-editor/v1|batch)#', $route)) {
-                continue;
-            }
-
-            // Extract namespace
             if (preg_match('#^/([^/]+)#', $route, $matches)) {
                 $namespace = $matches[1];
 
                 // Skip core namespaces
-                if (in_array($namespace, ['wp', 'oembed'])) {
+                if (in_array($namespace, ['wp', 'oembed', 'wp-site-health', 'wp-block-editor', 'batch'])) {
                     continue;
                 }
 
                 if (!isset($plugin_namespaces[$namespace])) {
                     $plugin_name = $this->guess_plugin_name($namespace, $handlers[0] ?? []);
                     $plugin_namespaces[$namespace] = [
-                        'namespace' => $namespace,
-                        'name' => $plugin_name,
-                        'route_count' => 0
+                        'namespace'   => $namespace,
+                        'name'        => $plugin_name,
+                        'route_count' => 0,
                     ];
                 }
                 $plugin_namespaces[$namespace]['route_count']++;
             }
         }
 
-        // Sort by plugin name
         uasort($plugin_namespaces, fn($a, $b) => strcmp($a['name'], $b['name']));
-
-        /**
-         * Filter detected plugins
-         *
-         * @param array $plugin_namespaces Detected plugins
-         */
         return apply_filters('sectoolbox_detected_plugins', array_values($plugin_namespaces));
     }
 
     /**
      * Analyze plugin routes
-     *
-     * @param array $selected_plugins
-     * @return array
      */
     public function analyze_plugin_routes(array $selected_plugins): array
     {
         global $wp_rest_server;
 
-        if (empty($wp_rest_server)) {
-            $wp_rest_server = rest_get_server();
-        }
-
+        $this->ensure_rest_routes_initialized();
         $routes = $wp_rest_server->get_routes();
         $analyzed_routes = [];
 
         foreach ($routes as $route => $handlers) {
-            // Skip core routes
             if (preg_match('#^/(wp/v2|oembed)#', $route)) {
                 continue;
             }
 
-            // Extract namespace
             $namespace = '';
             if (preg_match('#^/([^/]+)#', $route, $matches)) {
                 $namespace = $matches[1];
             }
 
-            // Skip if not in selected plugins
             if (!in_array($namespace, $selected_plugins)) {
                 continue;
             }
@@ -154,7 +150,6 @@ class SecToolbox_Route_Analyzer
             }
         }
 
-        // Sort by plugin name, then route
         usort($analyzed_routes, function ($a, $b) {
             $plugin_cmp = strcmp($a['plugin_name'], $b['plugin_name']);
             return $plugin_cmp !== 0 ? $plugin_cmp : strcmp($a['route'], $b['route']);

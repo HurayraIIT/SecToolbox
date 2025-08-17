@@ -65,6 +65,13 @@ class SecToolbox
         $this->init_hooks();
     }
 
+    private bool $rest_ready = false;
+
+    public function mark_rest_ready()
+    {
+        $this->rest_ready = true;
+    }
+
     /**
      * Initialize components
      */
@@ -81,7 +88,7 @@ class SecToolbox
     private function init_hooks(): void
     {
         add_action('init', [$this, 'load_textdomain']);
-
+        add_action('rest_api_init', [$this, 'mark_rest_ready'], 9999);
         if (is_admin()) {
             add_action('admin_init', [$this, 'check_version']);
         }

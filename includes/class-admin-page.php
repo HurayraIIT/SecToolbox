@@ -154,7 +154,7 @@ class SecToolbox_Admin_Page
             <div class="sectoolbox-main">
                 <div class="sectoolbox-controls">
                     <div class="postbox">
-                        <h2 class="hndle">
+                        <h2 class="handle">
                             <span><?php esc_html_e('Plugin Selection', 'sectoolbox'); ?></span>
                         </h2>
                         <div class="inside">
@@ -189,7 +189,7 @@ class SecToolbox_Admin_Page
 
                                 <div id="results-container" class="sectoolbox-results" style="display: none;">
                     <div class="postbox">
-                        <h2 class="hndle">
+                        <h2 class="handle">
                             <span><?php esc_html_e('REST API Routes', 'sectoolbox'); ?></span>
                         </h2>
                         <div class="inside">
