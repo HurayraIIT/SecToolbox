@@ -1,0 +1,396 @@
+/* SecToolbox Admin Styles */
+.sectoolbox-admin {
+    max-width: 1400px;
+}
+
+.sectoolbox-header {
+    margin-bottom: 20px;
+}
+
+.sectoolbox-header .description {
+    font-size: 14px;
+    color: #646970;
+    max-width: 800px;
+}
+
+/* Form Controls */
+.sectoolbox-form .form-table th {
+    padding-left: 0;
+    width: 200px;
+}
+
+.sectoolbox-form #plugin-select {
+    width: 100%;
+    max-width: 400px;
+    min-height: 120px;
+    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
+}
+
+.sectoolbox-form .submit {
+    margin-top: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #dcdcde;
+}
+
+/* Filters */
+.sectoolbox-filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f6f7f7;
+    border-radius: 4px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #50575e;
+    letter-spacing: 0.5px;
+}
+
+.filter-actions {
+    display: flex;
+    align-items: end;
+}
+
+/* Legend */
+.sectoolbox-legend h3 {
+    margin: 15px 0 10px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.legend-color {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-desc {
+    color: #646970;
+    font-weight: 400;
+    font-style: italic;
+    margin-left: 4px;
+}
+
+.risk-high .legend-color { background-color: #d63638; }
+.risk-medium .legend-color { background-color: #dba617; }
+.risk-low .legend-color { background-color: #00a32a; }
+
+/* Results */
+.results-count {
+    background: #2271b1;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+#routes-table-container {
+    max-height: 70vh;
+    overflow: auto;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+/* Routes Table */
+.sectoolbox-routes-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.sectoolbox-routes-table th,
+.sectoolbox-routes-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f1;
+    vertical-align: top;
+}
+
+.sectoolbox-routes-table th {
+    background: #f6f7f7;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #50575e;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 2px solid #c3c4c7;
+}
+
+.sectoolbox-routes-table tbody tr:hover {
+    background-color: #f6f7f7;
+}
+
+/* Risk Level Row Styling */
+.route-row {
+    border-left: 4px solid transparent;
+}
+
+.route-row.risk-high {
+    background-color: #fef7f7;
+    border-left-color: #d63638;
+}
+
+.route-row.risk-medium {
+    background-color: #fefbf3;
+    border-left-color: #dba617;
+}
+
+.route-row.risk-low {
+    background-color: #f6fdf7;
+    border-left-color: #00a32a;
+}
+
+/* Method Badges */
+.method-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+    margin-bottom: 2px;
+    color: white;
+}
+
+.method-GET { background-color: #2271b1; }
+.method-POST { background-color: #00a32a; }
+.method-PUT { background-color: #dba617; }
+.method-PATCH { background-color: #8c8f94; }
+.method-DELETE { background-color: #d63638; }
+
+/* Content Styling */
+.plugin-name {
+    font-weight: 600;
+    color: #2271b1;
+    font-size: 13px;
+}
+
+.route-path {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    background: #f6f7f7;
+    padding: 4px 8px;
+    border-radius: 3px;
+    border: 1px solid #dcdcde;
+}
+
+.access-level {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.access-public { background-color: #d63638; color: white; }
+.access-subscriber,
+.access-contributor { background-color: #dba617; color: white; }
+.access-author,
+.access-editor { background-color: #2271b1; color: white; }
+.access-admin { background-color: #00a32a; color: white; }
+.access-custom,
+.access-unknown { background-color: #8c8f94; color: white; }
+
+.permission-details {
+    font-size: 12px;
+    color: #646970;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.permission-details strong {
+    color: #1d2327;
+    display: inline-block;
+    min-width: 80px;
+}
+
+.risk-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.risk-indicator::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.risk-high::before { background-color: #d63638; }
+.risk-medium::before { background-color: #dba617; }
+.risk-low::before { background-color: #00a32a; }
+
+/* Error States */
+.sectoolbox-error {
+    background: #fcf2f2;
+    border: 1px solid #d63638;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+    color: #d63638;
+}
+
+.sectoolbox-error .dashicons {
+    margin-right: 8px;
+}
+
+/* No Results */
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8c8f94;
+    font-style: italic;
+}
+
+.no-results .dashicons {
+    font-size: 48px;
+    opacity: 0.3;
+    margin-bottom: 15px;
+}
+
+/* Loading States */
+.sectoolbox-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #8c8f94;
+}
+
+.sectoolbox-loading .spinner {
+    float: none;
+    margin-right: 10px;
+}
+
+/* Button Improvements */
+.sectoolbox-admin .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sectoolbox-admin .button .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
+    .sectoolbox-filter-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .sectoolbox-routes-table {
+        font-size: 12px;
+    }
+    
+    .sectoolbox-routes-table th,
+    .sectoolbox-routes-table td {
+        padding: 8px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .sectoolbox-filter-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .legend-items {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .sectoolbox-routes-table {
+        font-size: 11px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .sectoolbox-admin {
+        /* WordPress handles most dark mode styles automatically */
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sectoolbox-filter-controls,
+    .sectoolbox-admin .button,
+    .sectoolbox-admin #wpadminbar {
+        display: none !important;
+    }
+    
+    .sectoolbox-routes-table {
+        border: 1px solid #000;
+    }
+    
+    .sectoolbox-routes-table th,
+    .sectoolbox-routes-table td {
+        border: 1px solid #000;
+        background: white !important;
+    }
+}
+
+/* Accessibility Improvements */
+.sectoolbox-admin .sr-only {
+    position: absolute !important;
+    clip: rect(1px, 1px, 1px, 1px);
+    padding: 0 !important;
+    border: 0 !important;
+    height: 1px !important;
+    width: 1px !important;
+    overflow: hidden;
+}
+
+.sectoolbox-admin button:focus,
+.sectoolbox-admin input:focus,
+.sectoolbox-admin select:focus {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+.sectoolbox-admin .high-contrast {
+    filter: contrast(2);
+}
