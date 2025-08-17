@@ -187,7 +187,7 @@
 .access-contributor { background-color: #dba617; color: white; }
 .access-author,
 .access-editor { background-color: #2271b1; color: white; }
-.access-admin { background-color: #00a32a; color: white; }
+.access-administrator { background-color: #00a32a; color: white; }
 .access-custom,
 .access-unknown { background-color: #8c8f94; color: white; }
 

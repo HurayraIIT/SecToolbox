@@ -165,7 +165,7 @@ class SecToolbox_Ajax_Handler
                 $stats['public_write_routes']++;
             }
 
-            if ($access_level === 'admin') {
+            if ($access_level === 'administrator') {
                 $stats['admin_only_routes']++;
             }
         }

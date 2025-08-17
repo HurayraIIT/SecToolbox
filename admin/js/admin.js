@@ -192,8 +192,8 @@
         
         return routes.map(route => {
             // Mark routes with custom access level as medium risk
-            if (route.access_level === 'custom') {
-                route.risk_level = 'medium';
+            if (route.access_level === "custom" || route.access_level === "unknown") {
+              route.risk_level = "medium";
             }
             return route;
         }).sort((a, b) => {
@@ -318,7 +318,7 @@
    */
   function formatAccessLevel(level) {
     const labels = {
-      admin: "Admin Only",
+      administrator: "Administrator",
       editor: "Editor+",
       author: "Author+",
       contributor: "Contributor+",

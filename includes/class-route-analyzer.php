@@ -76,7 +76,7 @@ class SecToolbox_Route_Analyzer
 
         foreach ($routes as $route => $handlers) {
             // Skip core WordPress routes
-            if (preg_match('#^/(wp/v2|oembed)#', $route)) {
+            if (preg_match('#^/(wp/v2|oembed|wp-site-health/v1|wp-block-editor/v1|batch)#', $route)) {
                 continue;
             }
 
@@ -215,7 +215,7 @@ class SecToolbox_Route_Analyzer
         // Medium risk: Public read or protected write
         if (
             $access_level === 'public' ||
-            ($access_level !== 'admin' && !empty(array_intersect($methods, ['POST', 'PUT', 'PATCH', 'DELETE'])))
+            ($access_level !== 'administrator' && !empty(array_intersect($methods, ['POST', 'PUT', 'PATCH', 'DELETE'])))
         ) {
             return 'medium';
         }
@@ -366,47 +366,115 @@ class SecToolbox_Route_Analyzer
             return 'unknown';
         }
 
+        // Normalize capabilities
+        $capabilities = array_unique(array_map('strtolower', array_filter($capabilities)));
+
+        // // Super Admin capabilities (multisite only)
+        // $super_admin_capabilities = [
+        //     'create_sites', 'delete_sites', 'manage_network', 'manage_sites',
+        //     'manage_network_users', 'manage_network_plugins', 'manage_network_themes',
+        //     'manage_network_options', 'upload_plugins', 'upload_themes', 'upgrade_network', 'setup_network'
+        // ];
+
+        // // Check for Super Admin capabilities
+        // if (!empty(array_intersect($capabilities, $super_admin_capabilities))) {
+        //     return 'super_admin';
+        // }
+
+        // Administrator-only capabilities (single site or super admin in multisite)
+        $this->admin_capabilities = [
+            'update_core', 'update_plugins', 'update_themes', 'install_plugins', 'install_themes',
+            'delete_themes', 'delete_plugins', 'edit_plugins', 'edit_themes', 'edit_files',
+            'edit_users', 'add_users', 'create_users', 'delete_users', 'unfiltered_html',
+            'activate_plugins', 'manage_options', 'promote_users', 'remove_users', 'switch_themes',
+            'export', 'import', 'list_users', 'edit_dashboard', 'customize', 'delete_site',
+            'create_sites', 'delete_sites', 'manage_network', 'manage_sites', 'manage_network_users', 'manage_network_plugins', 'manage_network_themes', 'manage_network_options', 'upload_plugins', 'upload_themes', 'upgrade_network', 'setup_network'
+        ];
+
         // Check for admin-only capabilities
         $admin_caps_found = array_intersect($capabilities, $this->admin_capabilities);
         if (!empty($admin_caps_found)) {
-            return 'admin';
+            return 'administrator';
         }
 
-        // Define role hierarchy with capabilities
+        // Complete role hierarchy with all capabilities from WordPress documentation
         $role_hierarchy = [
-            'subscriber' => ['read'],
-            'contributor' => ['read', 'edit_posts', 'delete_posts'],
-            'author' => ['read', 'edit_posts', 'delete_posts', 'publish_posts', 'upload_files'],
+            'subscriber' => [
+                'read'
+            ],
+            'contributor' => [
+                'read', 'edit_posts', 'delete_posts',
+                'edit_post',
+                'delete_post'
+            ],
+            'author' => [
+                'edit_published_posts', 'publish_posts', 'upload_files', 'delete_published_posts'
+            ],
             'editor' => [
-                'read',
-                'edit_posts',
-                'delete_posts',
-                'publish_posts',
-                'upload_files',
-                'edit_others_posts',
-                'delete_others_posts',
-                'edit_published_posts',
-                'delete_published_posts',
-                'edit_pages',
-                'delete_pages',
-                'publish_pages',
-                'edit_others_pages',
-                'delete_others_pages',
-                'edit_published_pages',
-                'delete_published_pages',
-                'moderate_comments'
+                'edit_others_posts', 'delete_others_posts', 'edit_pages', 'delete_pages', 'publish_pages', 'edit_others_pages', 'delete_others_pages', 'edit_published_pages', 'delete_published_pages', 'moderate_comments', 'manage_categories', 'manage_links', 'delete_private_posts', 'edit_private_posts', 'read_private_posts', 'delete_private_pages', 'edit_private_pages', 'read_private_pages'
             ]
         ];
 
-        $min_role = 'admin';
+        // Check for exact role matches first
+        foreach ($role_hierarchy as $role => $role_caps) {
+            $intersection = array_intersect($capabilities, $role_caps);
+            $coverage = count($intersection) / count($role_caps);
+            
+            // If user has high coverage (80%+) of role capabilities, likely this role
+            if ($coverage >= 0.8) {
+                return $role;
+            }
+        }
 
+        // Check for minimum role based on exclusive capabilities
+        $min_role = 'subscriber';
+        $min_role_level = 0;
+        
+        // Role level mapping for comparison
+        $role_levels = [
+            'subscriber' => 0,
+            'contributor' => 1,
+            'author' => 2,
+            'editor' => 3,
+            'administrator' => 4
+        ];
+
+        // Check each capability against role hierarchy
         foreach ($capabilities as $cap) {
             foreach ($role_hierarchy as $role => $role_caps) {
                 if (in_array($cap, $role_caps)) {
-                    if ($this->compare_role_hierarchy($role, $min_role) < 0) {
+                    if ($role_levels[$role] > $min_role_level) {
                         $min_role = $role;
+                        $min_role_level = $role_levels[$role];
                     }
                 }
+            }
+        }
+
+        // Special capability checks for more accurate detection
+        if (in_array('publish_posts', $capabilities) && !in_array('edit_others_posts', $capabilities)) {
+            // Has publish but not edit others = likely author
+            if ($this->compare_role_hierarchy('author', $min_role) > 0) {
+                return 'author';
+            }
+        }
+
+        if (in_array('edit_others_posts', $capabilities) || in_array('moderate_comments', $capabilities)) {
+            // Can edit others' posts or moderate comments = at least editor
+            if ($this->compare_role_hierarchy('editor', $min_role) > 0) {
+                return 'editor';
+            }
+        }
+
+        // If only has 'read' capability, definitely subscriber
+        if (count($capabilities) === 1 && in_array('read', $capabilities)) {
+            return 'subscriber';
+        }
+
+        // If has edit_posts but not publish_posts, likely contributor
+        if (in_array('edit_posts', $capabilities) && !in_array('publish_posts', $capabilities)) {
+            if ($this->compare_role_hierarchy('contributor', $min_role) > 0) {
+                return 'contributor';
             }
         }
 
@@ -414,18 +482,28 @@ class SecToolbox_Route_Analyzer
     }
 
     /**
-     * Compare role hierarchy
+     * Compare role hierarchy levels
      *
      * @param string $role1
      * @param string $role2
-     * @return int
+     * @return int Returns -1 if role1 < role2, 0 if equal, 1 if role1 > role2
      */
     private function compare_role_hierarchy(string $role1, string $role2): int
     {
-        $hierarchy = ['subscriber' => 0, 'contributor' => 1, 'author' => 2, 'editor' => 3, 'admin' => 4];
-        $level1 = $hierarchy[$role1] ?? 4;
-        $level2 = $hierarchy[$role2] ?? 4;
-        return $level1 - $level2;
+        $hierarchy_levels = [
+            'unknown' => -1,
+            'subscriber' => 0,
+            'contributor' => 1,
+            'author' => 2,
+            'editor' => 3,
+            'administrator' => 4,
+            'super_admin' => 5
+        ];
+
+        $level1 = $hierarchy_levels[$role1] ?? -1;
+        $level2 = $hierarchy_levels[$role2] ?? -1;
+
+        return $level1 <=> $level2;
     }
 
     /**
