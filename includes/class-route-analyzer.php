@@ -102,7 +102,7 @@ class SecToolbox_Route_Analyzer
                 }
 
                 if (!isset($plugin_namespaces[$namespace])) {
-                    $plugin_name = $this->guess_plugin_name($namespace, $handlers[0] ?? []);
+                    $plugin_name = $namespace;
                     $plugin_namespaces[$namespace] = [
                         'namespace'   => $namespace,
                         'name'        => $plugin_name,
@@ -177,7 +177,7 @@ class SecToolbox_Route_Analyzer
             return [
                 'route' => $route,
                 'namespace' => $namespace,
-                'plugin_name' => $this->format_plugin_name($namespace),
+                'plugin_name' => $namespace,
                 'methods' => $methods,
                 'access_level' => $permission_analysis['access_level'],
                 'capabilities' => $permission_analysis['capabilities'],
@@ -364,18 +364,6 @@ class SecToolbox_Route_Analyzer
         // Normalize capabilities
         $capabilities = array_unique(array_map('strtolower', array_filter($capabilities)));
 
-        // // Super Admin capabilities (multisite only)
-        // $super_admin_capabilities = [
-        //     'create_sites', 'delete_sites', 'manage_network', 'manage_sites',
-        //     'manage_network_users', 'manage_network_plugins', 'manage_network_themes',
-        //     'manage_network_options', 'upload_plugins', 'upload_themes', 'upgrade_network', 'setup_network'
-        // ];
-
-        // // Check for Super Admin capabilities
-        // if (!empty(array_intersect($capabilities, $super_admin_capabilities))) {
-        //     return 'super_admin';
-        // }
-
         // Administrator-only capabilities (single site or super admin in multisite)
         $this->admin_capabilities = [
             'update_core', 'update_plugins', 'update_themes', 'install_plugins', 'install_themes',
@@ -422,7 +410,7 @@ class SecToolbox_Route_Analyzer
         }
 
         // Check for minimum role based on exclusive capabilities
-        $min_role = 'subscriber';
+        $min_role = 'custom';
         $min_role_level = 0;
         
         // Role level mapping for comparison
@@ -526,56 +514,5 @@ class SecToolbox_Route_Analyzer
         }
 
         return array_unique($custom_roles);
-    }
-
-    /**
-     * Guess plugin name from namespace
-     *
-     * @param string $namespace
-     * @param array $handler
-     * @return string
-     */
-    private function guess_plugin_name(string $namespace, array $handler): string
-    {
-        // Try to get plugin name from callback
-        $callback = $handler['callback'] ?? null;
-
-        if (is_array($callback) && is_object($callback[0])) {
-            $class_name = get_class($callback[0]);
-
-            if (preg_match('/^(.+?)(_|\\\\)/', $class_name, $matches)) {
-                return $this->format_plugin_name($matches[1]);
-            }
-        }
-
-        // Known namespace mappings
-        $known_namespaces = [
-            'wc' => 'WooCommerce',
-            'wc-admin' => 'WooCommerce Admin',
-            'yoast' => 'Yoast SEO',
-            'elementor' => 'Elementor',
-            'buddypress' => 'BuddyPress',
-            'bbpress' => 'bbPress',
-            'learndash' => 'LearnDash',
-            'tribe' => 'The Events Calendar',
-            'gravityforms' => 'Gravity Forms',
-            'contact-form-7' => 'Contact Form 7',
-            'jetpack' => 'Jetpack',
-            'woocommerce' => 'WooCommerce'
-        ];
-
-        return $known_namespaces[$namespace] ?? $this->format_plugin_name($namespace);
-    }
-
-    /**
-     * Format plugin name
-     *
-     * @param string $name
-     * @return string
-     */
-    private function format_plugin_name(string $name): string
-    {
-        $name = str_replace(['-', '_'], ' ', $name);
-        return ucwords($name);
     }
 }

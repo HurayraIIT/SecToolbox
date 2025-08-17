@@ -229,7 +229,6 @@
 
                 <td class="column-plugin">
                     <strong class="plugin-name">${escapeHtml(route.plugin_name)}</strong>
-                    <div class="plugin-namespace">${escapeHtml(route.namespace)}</div>
                 </td>
 
                 <td class="column-route">
