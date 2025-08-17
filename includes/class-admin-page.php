@@ -180,7 +180,7 @@ class SecToolbox_Admin_Page
                                 <p class="submit">
                                     <button id="inspect-routes-btn" class="button button-primary" disabled>
                                         <span class="dashicons dashicons-search" aria-hidden="true"></span>
-                                        <?php esc_html_e('Analyze Selected Routes', 'sectoolbox'); ?>
+                                        <span class="button-text"><?php esc_html_e('Analyze Selected Routes', 'sectoolbox'); ?></span>
                                     </button>
                                     <span id="loading-spinner" class="spinner"></span>
                                 </p>
@@ -189,96 +189,16 @@ class SecToolbox_Admin_Page
                     </div>
                 </div>
 
-                <div id="results-container" class="sectoolbox-results" style="display: none;">
-                    <div class="sectoolbox-filters postbox">
+                                <div id="results-container" class="sectoolbox-results" style="display: none;">
+                    <div class="postbox">
                         <h2 class="hndle">
-                            <span><?php esc_html_e('Filters & Legend', 'sectoolbox'); ?></span>
+                            <span><?php esc_html_e('REST API Routes', 'sectoolbox'); ?></span>
                         </h2>
                         <div class="inside">
-                            <div class="sectoolbox-filter-controls">
-                                <div class="filter-group">
-                                    <label for="route-filter"><?php esc_html_e('Filter by route:', 'sectoolbox'); ?></label>
-                                    <input type="text" id="route-filter" class="regular-text" placeholder="<?php esc_attr_e('e.g. /users, /posts', 'sectoolbox'); ?>">
-                                </div>
-
-                                <div class="filter-group">
-                                    <label for="method-filter"><?php esc_html_e('HTTP Method:', 'sectoolbox'); ?></label>
-                                    <select id="method-filter" class="regular-text">
-                                        <option value=""><?php esc_html_e('All Methods', 'sectoolbox'); ?></option>
-                                        <option value="GET">GET</option>
-                                        <option value="POST">POST</option>
-                                        <option value="PUT">PUT</option>
-                                        <option value="PATCH">PATCH</option>
-                                        <option value="DELETE">DELETE</option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-group">
-                                    <label for="access-filter"><?php esc_html_e('Access Level:', 'sectoolbox'); ?></label>
-                                    <select id="access-filter" class="regular-text">
-                                        <option value=""><?php esc_html_e('All Access Levels', 'sectoolbox'); ?></option>
-                                        <option value="public"><?php esc_html_e('Public Access', 'sectoolbox'); ?></option>
-                                        <option value="subscriber"><?php esc_html_e('Subscriber+', 'sectoolbox'); ?></option>
-                                        <option value="contributor"><?php esc_html_e('Contributor+', 'sectoolbox'); ?></option>
-                                        <option value="author"><?php esc_html_e('Author+', 'sectoolbox'); ?></option>
-                                        <option value="editor"><?php esc_html_e('Editor+', 'sectoolbox'); ?></option>
-                                        <option value="admin"><?php esc_html_e('Admin Only', 'sectoolbox'); ?></option>
-                                        <option value="custom"><?php esc_html_e('Custom/Unknown', 'sectoolbox'); ?></option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-group">
-                                    <label for="risk-filter"><?php esc_html_e('Risk Level:', 'sectoolbox'); ?></label>
-                                    <select id="risk-filter" class="regular-text">
-                                        <option value=""><?php esc_html_e('All Risk Levels', 'sectoolbox'); ?></option>
-                                        <option value="high"><?php esc_html_e('High Risk', 'sectoolbox'); ?></option>
-                                        <option value="medium"><?php esc_html_e('Medium Risk', 'sectoolbox'); ?></option>
-                                        <option value="low"><?php esc_html_e('Low Risk', 'sectoolbox'); ?></option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-actions">
-                                    <button id="clear-filters" class="button">
-                                        <?php esc_html_e('Clear Filters', 'sectoolbox'); ?>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="sectoolbox-legend">
-                                <h3><?php esc_html_e('Security Level Legend', 'sectoolbox'); ?></h3>
-                                <div class="legend-items">
-                                    <div class="legend-item risk-high">
-                                        <span class="legend-color"></span>
-                                        <?php esc_html_e('High Risk', 'sectoolbox'); ?>
-                                        <span class="legend-desc"><?php esc_html_e('Public write access', 'sectoolbox'); ?></span>
-                                    </div>
-                                    <div class="legend-item risk-medium">
-                                        <span class="legend-color"></span>
-                                        <?php esc_html_e('Medium Risk', 'sectoolbox'); ?>
-                                        <span class="legend-desc"><?php esc_html_e('Public read or protected write', 'sectoolbox'); ?></span>
-                                    </div>
-                                    <div class="legend-item risk-low">
-                                        <span class="legend-color"></span>
-                                        <?php esc_html_e('Low Risk', 'sectoolbox'); ?>
-                                        <span class="legend-desc"><?php esc_html_e('Admin only or read-only', 'sectoolbox'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sectoolbox-routes-analysis postbox">
-                        <h2 class="hndle">
-                            <span><?php esc_html_e('Routes Analysis Results', 'sectoolbox'); ?></span>
-                            <span id="results-count" class="results-count"></span>
-                        </h2>
-                        <div class="inside">
-                            <div id="routes-table-container"></div>
+                            <div id="route-list" class="sectoolbox-route-list"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
     <?php
     }
 

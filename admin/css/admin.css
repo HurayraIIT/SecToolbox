@@ -1,6 +1,6 @@
 /* SecToolbox Admin Styles */
 .sectoolbox-admin {
-    max-width: 1400px;
+    max-width: 100%;
 }
 
 .sectoolbox-header {
@@ -32,72 +32,7 @@
     border-top: 1px solid #dcdcde;
 }
 
-/* Filters */
-.sectoolbox-filter-controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 15px;
-    background: #f6f7f7;
-    border-radius: 4px;
-}
 
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.filter-group label {
-    font-weight: 600;
-    font-size: 12px;
-    text-transform: uppercase;
-    color: #50575e;
-    letter-spacing: 0.5px;
-}
-
-.filter-actions {
-    display: flex;
-    align-items: end;
-}
-
-/* Legend */
-.sectoolbox-legend h3 {
-    margin: 15px 0 10px 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: #1d2327;
-}
-
-.legend-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.legend-color {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.legend-desc {
-    color: #646970;
-    font-weight: 400;
-    font-style: italic;
-    margin-left: 4px;
-}
 
 .risk-high .legend-color { background-color: #d63638; }
 .risk-medium .legend-color { background-color: #dba617; }

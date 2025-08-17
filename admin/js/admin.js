@@ -6,7 +6,6 @@
 
   // Global variables
   let allRoutes = [];
-  let filteredRoutes = [];
 
   // Initialize when document is ready
   $(document).ready(function () {
@@ -19,13 +18,6 @@
   function initializeSecToolbox() {
     bindEvents();
     loadPlugins();
-
-    // Auto-refresh plugins every 30 seconds if no results are showing
-    setInterval(function () {
-      if ($("#results-container").is(":hidden")) {
-        loadPlugins();
-      }
-    }, 30000);
   }
 
   /**
@@ -34,13 +26,6 @@
   function bindEvents() {
     $("#plugin-select").on("change", handlePluginSelection);
     $("#inspect-routes-btn").on("click", inspectRoutes);
-
-    // Filter events
-    $("#route-filter, #method-filter, #access-filter, #risk-filter").on("input change", debounce(applyFilters, 300));
-
-    $("#clear-filters").on("click", clearAllFilters);
-
-    // Keyboard shortcuts
     $(document).on("keydown", handleKeyboardShortcuts);
   }
 
@@ -104,35 +89,18 @@
       return;
     }
 
-    // Group plugins by first letter for better UX
-    const groupedPlugins = groupPluginsByLetter(plugins);
+    plugins.forEach(function (plugin) {
+      const pluginName = plugin.namespace || plugin.name;  // Fallback to name if namespace is missing
+      const routeCount = plugin.route_count ? ` (${plugin.route_count} routes)` : "";
+      const displayName = pluginName + routeCount;
 
-    Object.keys(groupedPlugins)
-      .sort()
-      .forEach(function (letter) {
-        const $optgroup = $("<optgroup>").attr("label", `${letter.toUpperCase()} (${groupedPlugins[letter].length})`);
-
-        groupedPlugins[letter].forEach(function (plugin) {
-          const routeCount = plugin.route_count ? ` (${plugin.route_count} routes)` : "";
-          $optgroup.append(
-            $("<option>")
-              .val(plugin.namespace)
-              .text(`${plugin.name}${routeCount}`)
-              .attr("title", `Namespace: ${plugin.namespace}`)
-          );
-        });
-
-        $select.append($optgroup);
-      });
-
-    // Auto-select commonly vulnerable plugins for security testing
-    const vulnerablePlugins = ["wc", "woocommerce", "elementor", "contact-form-7"];
-    const availableVulnerable = plugins.filter((p) => vulnerablePlugins.includes(p.namespace));
-
-    if (availableVulnerable.length) {
-      $select.val(availableVulnerable.map((p) => p.namespace));
-      handlePluginSelection();
-    }
+      $select.append(
+        $("<option>")
+          .val(plugin.namespace)
+          .text(displayName)
+          .attr("title", `Namespace: ${plugin.namespace}`)
+      );
+    });
   }
 
   /**
@@ -207,7 +175,7 @@
    * Display analysis results
    */
   function displayResults(routes, stats) {
-    const container = $("#routes-table-container");
+    const container = $("#route-list");
 
     if (!routes.length) {
       container.html(`
@@ -243,10 +211,8 @@
     html += "</tbody></table>";
     container.html(html);
 
-    // Store filtered routes and update count
-    filteredRoutes = routes;
-    updateResultsCount(routes.length, stats);
-
+    updateResultsCount(routes.length);
+    
     // Add click handlers for expandable details
     bindRouteRowEvents();
   }
@@ -415,60 +381,6 @@
       html += "</ul></div>";
     }
 
-    // Security recommendations
-    html += `
-            <div class="detail-section">
-                <h4>Security Assessment</h4>
-                ${generateSecurityRecommendations(route)}
-            </div>
-        `;
-
-    html += "</div>";
-    return html;
-  }
-
-  /**
-   * Generate security recommendations
-   */
-  function generateSecurityRecommendations(route) {
-    let html = "";
-    const issues = [];
-    const recommendations = [];
-
-    // Analyze security issues
-    if (route.access_level === "public" && route.methods.some((m) => ["POST", "PUT", "PATCH", "DELETE"].includes(m))) {
-      issues.push("🚨 Public write access detected");
-      recommendations.push("Consider adding authentication requirements");
-    }
-
-    if (route.access_level === "unknown" || route.access_level === "custom") {
-      issues.push("⚠️ Custom/unknown permission logic");
-      recommendations.push("Manual review of permission callback recommended");
-    }
-
-    if (route.capabilities.length === 0 && route.access_level !== "public") {
-      issues.push("⚠️ No specific capabilities defined");
-      recommendations.push("Consider implementing specific capability checks");
-    }
-
-    // Display issues
-    if (issues.length > 0) {
-      html += '<div class="security-issues"><h5>Potential Issues:</h5><ul>';
-      issues.forEach((issue) => (html += `<li>${issue}</li>`));
-      html += "</ul></div>";
-    }
-
-    // Display recommendations
-    if (recommendations.length > 0) {
-      html += '<div class="security-recommendations"><h5>Recommendations:</h5><ul>';
-      recommendations.forEach((rec) => (html += `<li>${rec}</li>`));
-      html += "</ul></div>";
-    }
-
-    if (issues.length === 0) {
-      html += '<div class="security-ok">✅ No obvious security issues detected</div>';
-    }
-
     return html;
   }
 
@@ -508,101 +420,14 @@
       });
   }
 
-  /**
-   * Apply filters to the results table
-   */
-  function applyFilters() {
-    const routeFilter = $("#route-filter").val().toLowerCase();
-    const methodFilter = $("#method-filter").val();
-    const accessFilter = $("#access-filter").val();
-    const riskFilter = $("#risk-filter").val();
 
-    filteredRoutes = allRoutes.filter(function (route) {
-      // Route filter
-      if (routeFilter && route.route.toLowerCase().indexOf(routeFilter) === -1) {
-        return false;
-      }
-
-      // Method filter
-      if (methodFilter && !route.methods.includes(methodFilter)) {
-        return false;
-      }
-
-      // Access level filter
-      if (accessFilter) {
-        if (accessFilter === "custom" && !["custom", "unknown"].includes(route.access_level)) {
-          return false;
-        }
-        if (accessFilter !== "custom" && route.access_level !== accessFilter) {
-          return false;
-        }
-      }
-
-      // Risk level filter
-      if (riskFilter && route.risk_level !== riskFilter) {
-        return false;
-      }
-
-      return true;
-    });
-
-    // Update display
-    updateTableVisibility();
-    updateResultsCount(filteredRoutes.length);
-  }
-
-  /**
-   * Update table row visibility based on filters
-   */
-  function updateTableVisibility() {
-    const visibleRoutes = new Set(
-      filteredRoutes.map((route) => `${route.route}-${route.methods.join(",")}-${route.namespace}`)
-    );
-
-    $(".route-row").each(function () {
-      const $row = $(this);
-      const route = $row.data("route");
-      const methods = $row.data("methods");
-      const plugin = $row.data("plugin");
-      const key = `${route}-${methods}-${plugin}`;
-
-      $row.toggle(visibleRoutes.has(key));
-    });
-  }
-
-  /**
-   * Clear all filters
-   */
-  function clearAllFilters() {
-    $("#route-filter, #method-filter, #access-filter, #risk-filter").val("");
-
-    if (allRoutes.length > 0) {
-      filteredRoutes = allRoutes;
-      $(".route-row").show();
-      updateResultsCount(allRoutes.length);
-    }
-  }
 
   /**
    * Update results count display
    */
-  function updateResultsCount(count, stats = null) {
+  function updateResultsCount(count) {
     const $counter = $("#results-count");
-
-    if (count === 0) {
-      $counter.text("No results");
-      return;
-    }
-
-    let text = count === allRoutes.length ? `${count} routes` : `${count} of ${allRoutes.length} routes`;
-
-    if (stats) {
-      const highRisk = stats.by_risk_level.high || 0;
-      if (highRisk > 0) {
-        text += ` (${highRisk} high risk)`;
-      }
-    }
-
+    const text = count === 0 ? "No results" : `${count} routes`;
     $counter.text(text);
   }
 
@@ -614,10 +439,10 @@
     const $spinner = $("#loading-spinner");
 
     if (loading) {
-      $button.prop("disabled", true).find("span").first().text(sectoolboxAjax.strings.analyzing);
+      $button.prop("disabled", true).find(".button-text").text(sectoolboxAjax.strings.analyzing);
       $spinner.addClass("is-active");
     } else {
-      $button.prop("disabled", false).find("span").first().text("Analyze Selected Routes");
+      $button.prop("disabled", false).find(".button-text").text("Analyze Selected Routes");
       $spinner.removeClass("is-active");
 
       // Re-check plugin selection
@@ -700,8 +525,6 @@
   // Export functions for testing (if needed)
   window.SecToolbox = {
     loadPlugins,
-    inspectRoutes,
-    applyFilters,
-    clearAllFilters,
+    inspectRoutes
   };
 })(jQuery);
