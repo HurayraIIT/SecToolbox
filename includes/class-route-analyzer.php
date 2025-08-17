@@ -233,7 +233,7 @@ class SecToolbox_Route_Analyzer
     private function analyze_permission_callback($permission_callback): array
     {
         $result = [
-            'access_level' => 'unknown',
+            'access_level' => 'custom',
             'capabilities' => [],
             'custom_roles' => [],
             'callback_info' => ''

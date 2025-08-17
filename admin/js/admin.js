@@ -2,106 +2,115 @@
  * SecToolbox Admin JavaScript
  */
 (function ($) {
-  "use strict";
+    "use strict";
 
-  // Global variables
-  let allRoutes = [];
+    // Global variables
+    let allRoutes = [];
 
-  // Initialize when document is ready
-  $(document).ready(function () {
-    initializeSecToolbox();
-  });
+    // Initialize when document is ready
+    $(document).ready(function () {
+        initializeSecToolbox();
+    });
 
-  /**
-   * Initialize the SecToolbox interface
-   */
-  function initializeSecToolbox() {
-    bindEvents();
-    loadPlugins();
-  }
-
-  /**
-   * Bind event handlers
-   */
-  function bindEvents() {
-    $("#plugin-select").on("change", handlePluginSelection);
-    $("#inspect-routes-btn").on("click", inspectRoutes);
-    $(document).on("keydown", handleKeyboardShortcuts);
-  }
-
-  /**
-   * Handle plugin selection
-   */
-  function handlePluginSelection() {
-    const selected = $("#plugin-select").val();
-    const hasSelection = selected && selected.length > 0;
-
-    $("#inspect-routes-btn").prop("disabled", !hasSelection);
-
-    if (hasSelection) {
-      $("#inspect-routes-btn").removeClass("button-secondary").addClass("button-primary");
-    } else {
-      $("#inspect-routes-btn").removeClass("button-primary").addClass("button-secondary");
+    /**
+     * Initialize the SecToolbox interface
+     */
+    function initializeSecToolbox() {
+        bindEvents();
+        loadPlugins();
     }
-  }
 
-  /**
-   * Load plugins with REST routes
-   */
-  function loadPlugins() {
-    const $select = $("#plugin-select");
+    /**
+     * Bind event handlers
+     */
+    function bindEvents() {
+        $(document).on('change', '.plugin-checkbox', handlePluginSelection);
+        $("#inspect-routes-btn").on("click", inspectRoutes);
+        $(document).on("keydown", handleKeyboardShortcuts);
+    }
 
-    // Show loading state
-    $select.html('<option value="">' + sectoolboxAjax.strings.loading + "</option>");
+    /**
+     * Handle plugin selection
+     */
+    function handlePluginSelection() {
+        const selectedCount = $('.plugin-checkbox:checked').length;
+        const hasSelection = selectedCount > 0;
 
-    $.ajax({
-      url: sectoolboxAjax.ajaxurl,
-      type: "POST",
-      data: {
-        action: "sectoolbox_get_plugins",
-        nonce: sectoolboxAjax.nonce,
-      },
-      timeout: 10000,
-      success: function (response) {
-        if (response.success && response.data.plugins) {
-          populatePluginSelect(response.data.plugins);
+        $("#inspect-routes-btn").prop("disabled", !hasSelection);
+
+        if (hasSelection) {
+            $("#inspect-routes-btn").removeClass("button-secondary").addClass("button-primary");
         } else {
-          showError(response.data?.message || sectoolboxAjax.strings.error);
+            $("#inspect-routes-btn").removeClass("button-primary").addClass("button-secondary");
         }
-      },
-      error: function (xhr, status, error) {
-        showError(`${sectoolboxAjax.strings.error}: ${error}`);
-        $select.html(`<option value="">${sectoolboxAjax.strings.no_plugins}</option>`);
-      },
-    });
-  }
-
-  /**
-   * Populate plugin selection dropdown
-   */
-  function populatePluginSelect(plugins) {
-    const $select = $("#plugin-select");
-
-    $select.empty();
-
-    if (!plugins.length) {
-      $select.append(`<option value="">${sectoolboxAjax.strings.no_plugins}</option>`);
-      return;
     }
 
-    plugins.forEach(function (plugin) {
-      const pluginName = plugin.namespace || plugin.name;  // Fallback to name if namespace is missing
-      const routeCount = plugin.route_count ? ` (${plugin.route_count} routes)` : "";
-      const displayName = pluginName + routeCount;
+    /**
+     * Load plugins with REST routes
+     */
+    function loadPlugins() {
+        const $container = $("#plugin-checkboxes");
 
-      $select.append(
-        $("<option>")
-          .val(plugin.namespace)
-          .text(displayName)
-          .attr("title", `Namespace: ${plugin.namespace}`)
-      );
-    });
-  }
+        // Show loading state
+        $container.html('<p class="loading-text">' + sectoolboxAjax.strings.loading + "</p>");
+
+        $.ajax({
+            url: sectoolboxAjax.ajaxurl,
+            type: "POST",
+            data: {
+                action: "sectoolbox_get_plugins",
+                nonce: sectoolboxAjax.nonce,
+            },
+            timeout: 10000,
+            success: function (response) {
+                if (response.success && response.data.plugins) {
+                    populatePluginCheckboxes(response.data.plugins);
+                } else {
+                    showError(response.data?.message || sectoolboxAjax.strings.error);
+                }
+            },
+            error: function (xhr, status, error) {
+                showError(`${sectoolboxAjax.strings.error}: ${error}`);
+                $container.html(`<p class="error">${sectoolboxAjax.strings.no_plugins}</p>`);
+            },
+        });
+    }
+
+    /**
+     * Populate plugin checkboxes
+     */
+    function populatePluginCheckboxes(plugins) {
+        const $container = $("#plugin-checkboxes");
+        $container.empty();
+
+        if (!plugins.length) {
+            $container.append(`<p class="no-plugins">${sectoolboxAjax.strings.no_plugins}</p>`);
+            return;
+        }
+
+        // Sort plugins alphabetically
+        plugins.sort((a, b) => (a.name || a.namespace).localeCompare(b.name || b.namespace));
+
+        plugins.forEach(function (plugin) {
+            const pluginName = plugin.namespace || plugin.name;
+            const routeCount = plugin.route_count ? ` (${plugin.route_count} routes)` : "";
+            const displayName = pluginName + routeCount;
+
+            const checkbox = $('<div class="plugin-checkbox-wrapper"></div>').append(
+                $('<label></label>').append(
+                    $('<input>').attr({
+                        type: 'checkbox',
+                        class: 'plugin-checkbox',
+                        value: plugin.namespace,
+                        'data-name': pluginName
+                    }),
+                    $('<span></span>').text(' ' + displayName)
+                )
+            );
+
+            $container.append(checkbox);
+        });
+    }
 
   /**
    * Group plugins by first letter
@@ -117,59 +126,80 @@
     }, {});
   }
 
-  /**
-   * Inspect selected routes
-   */
-  function inspectRoutes() {
-    const selectedPlugins = $("#plugin-select").val();
+    /**
+     * Inspect selected routes
+     */
+    function inspectRoutes() {
+        const selectedPlugins = $('.plugin-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
 
-    if (!selectedPlugins || !selectedPlugins.length) {
-      showError(sectoolboxAjax.strings.select_plugins);
-      return;
+        if (!selectedPlugins.length) {
+            showError(sectoolboxAjax.strings.select_plugins);
+            return;
+        }
+
+        // Update UI state
+        setLoadingState(true);
+        $("#results-container").hide();
+
+        $.ajax({
+            url: sectoolboxAjax.ajaxurl,
+            type: "POST",
+            data: {
+                action: "sectoolbox_inspect_routes",
+                plugins: selectedPlugins,
+                nonce: sectoolboxAjax.nonce,
+            },
+            timeout: 30000,
+            success: function (response) {
+                if (response.success && response.data.routes) {
+                    allRoutes = response.data.routes;
+                    // Sort routes by risk level before displaying
+                    const sortedRoutes = sortRoutesByRisk(allRoutes);
+                    displayResults(sortedRoutes, response.data.stats);
+                    $("#results-container").slideDown();
+
+                    // Scroll to results
+                    $("html, body").animate(
+                        {
+                            scrollTop: $("#results-container").offset().top - 50,
+                        },
+                        500
+                    );
+                } else {
+                    showError(response.data?.message || sectoolboxAjax.strings.error);
+                }
+            },
+            error: function (xhr, status, error) {
+                if (status === "timeout") {
+                    showError("Analysis timed out. Try selecting fewer plugins.");
+                } else {
+                    showError(`${sectoolboxAjax.strings.error}: ${error}`);
+                }
+            },
+            complete: function () {
+                setLoadingState(false);
+            },
+        });
     }
 
-    // Update UI state
-    setLoadingState(true);
-    $("#results-container").hide();
-
-    $.ajax({
-      url: sectoolboxAjax.ajaxurl,
-      type: "POST",
-      data: {
-        action: "sectoolbox_inspect_routes",
-        plugins: selectedPlugins,
-        nonce: sectoolboxAjax.nonce,
-      },
-      timeout: 30000,
-      success: function (response) {
-        if (response.success && response.data.routes) {
-          allRoutes = response.data.routes;
-          displayResults(allRoutes, response.data.stats);
-          $("#results-container").slideDown();
-
-          // Scroll to results
-          $("html, body").animate(
-            {
-              scrollTop: $("#results-container").offset().top - 50,
-            },
-            500
-          );
-        } else {
-          showError(response.data?.message || sectoolboxAjax.strings.error);
-        }
-      },
-      error: function (xhr, status, error) {
-        if (status === "timeout") {
-          showError("Analysis timed out. Try selecting fewer plugins.");
-        } else {
-          showError(`${sectoolboxAjax.strings.error}: ${error}`);
-        }
-      },
-      complete: function () {
-        setLoadingState(false);
-      },
-    });
-  }
+    /**
+     * Sort routes by risk level: high -> medium -> low
+     */
+    function sortRoutesByRisk(routes) {
+        const riskOrder = { high: 0, medium: 1, low: 2 };
+        
+        return routes.map(route => {
+            // Mark routes with custom access level as medium risk
+            if (route.access_level === 'custom') {
+                route.risk_level = 'medium';
+            }
+            return route;
+        }).sort((a, b) => {
+            return riskOrder[a.risk_level] - riskOrder[b.risk_level];
+        });
+    }
 
   /**
    * Display analysis results

@@ -162,16 +162,14 @@ class SecToolbox_Admin_Page
                                 <table class="form-table">
                                     <tr>
                                         <th scope="row">
-                                            <label for="plugin-select">
-                                                <?php esc_html_e('Select Plugins to Analyze:', 'sectoolbox'); ?>
-                                            </label>
+                                            <?php esc_html_e('Select Plugins to Analyze:', 'sectoolbox'); ?>
                                         </th>
                                         <td>
-                                            <select id="plugin-select" multiple size="8" class="regular-text">
-                                                <option value=""><?php esc_html_e('Loading plugins...', 'sectoolbox'); ?></option>
-                                            </select>
+                                            <div id="plugin-checkboxes" class="sectoolbox-plugin-list">
+                                                <p class="loading-text"><?php esc_html_e('Loading plugins...', 'sectoolbox'); ?></p>
+                                            </div>
                                             <p class="description">
-                                                <?php esc_html_e('Hold Ctrl/Cmd to select multiple plugins. Only plugins with REST API routes are shown.', 'sectoolbox'); ?>
+                                                <?php esc_html_e('Select the plugins you want to analyze. Only plugins with REST API routes are shown.', 'sectoolbox'); ?>
                                             </p>
                                         </td>
                                     </tr>
